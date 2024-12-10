@@ -1,22 +1,27 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from dotenv import load_dotenv
-import os
 
-load_dotenv('key.env')
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    try:
+        return templates.TemplateResponse("index.html", {"request": request})
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        return HTMLResponse(content="Произошла ошибка", status_code=500)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,13 +32,7 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@app.before_request
-def create_tables():
-    db.create_all()
-
-@app.route('/')
-def index():
-    return render_template('index.html')
+db.create_all()
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -68,11 +67,3 @@ def profile():
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)

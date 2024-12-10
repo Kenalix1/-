@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'CustomFontName';
+    src: url('CustomFontName.woff2') format('woff2'), 
+    url('CustomFontName.woff') format('woff');
+  }
+  
+  body {
+    font-family: 'CustomFontName', Candara, sans-serif;
+  }
